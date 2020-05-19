@@ -15,22 +15,130 @@ const Logo = styled.div`
 `;
 // change the color #ff2d55 to props.color later
 
-const Screen = styled.div`
-  display: flex;
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-`;
-
 const Wrapper = styled.div`
   &&& {
     touch-action: manipulation !important;
     position: relative !important;
     overflow: hidden !important;
-    height: ${(props) => (props.height ? props.height : "100%")} !important;
-    width: ${(props) => (props.width ? props.width : "100%")} !important;
+    height: ${(props) =>
+      props.height ? `${props.height}px` : "100%"} !important;
+    width: ${(props) => (props.width ? `${props.width}px` : "100%")} !important;
     background: grey;
+  }
+`;
+const HeaderRow = styled.div`
+  &&& {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: calc(100% - 20px) !important;
+    padding: 10px !important;
+    z-index: 20000 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+`;
+
+const ExtraPos = styled.div`
+  &&& {
+    margin: 0px 20px !important;
+    margin-bottom: 12px !important;
+  }
+`;
+
+const ScoreWrap = styled.div`
+  &&& {
+    left: 25px !important;
+    bottom: 25px !important;
+    position: absolute !important;
+    z-index: "10009 !important";
+    font-weight: 700 !important;
+    font-size: 40px !important;
+    font-family: "Montserrat" !important;
+  }
+`;
+
+const CloseButton = styled.span`
+  &&& {
+    position: relative !important;
+    margin-bottom: 12px !important;
+    height: 30px !important;
+    width: 30px !important;
+    background: rgba(171, 171, 171, 0.16) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    margin-right: 15px !important;
+
+    &:hover {
+      background: rgba(171, 171, 171, 0.26) !important;
+    }
+    &:before,
+    &:after {
+      position: absolute !important;
+
+      content: " " !important;
+      height: 12px !important;
+      width: 2px !important;
+      border-radius: 1px !important;
+      background-color: #4e4e4e !important;
+    }
+    &:before {
+      transform: rotate(45deg) !important;
+    }
+    &:after {
+      transform: rotate(-45deg) !important;
+    }
+  }
+`;
+/* for close button
+${media.desktop`
+    
+      
+      
+  `};
+  for initialtext
+  ${media.desktop`
+    display: none !important;
+    `};*/
+
+const InitialText = styled.div`
+  &&& {
+    position: absolute !important;
+    top: 400px !important;
+    left: 100px !important;
+    width: 230px !important;
+    font-family: "Montserrat" !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    font-size: 14px !important;
+    line-height: 24px !important;
+    /* or 171% */
+
+    letter-spacing: 0.02em !important;
+    color: #888888 !important;
+  }
+`;
+
+const CloseWrapper = styled.div`
+  &&& {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    margin-left: auto !important;
+  }
+`;
+
+const GameOverWrapper = styled.div`
+  &&& {
+    position: absolute !important;
+    top: 0px !important;
+    left: 0px !important;
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 19000 !important;
   }
 `;
 
@@ -75,16 +183,16 @@ export class FlappyEye extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentHeight: 800 / 2 + 120, // change the constant to props.height
-      initialLogoX: 800 / 2 - 250,
+      currentHeight: props.height * 0.4, // change the constant to props.height
+      initialLogoX: props.width * 0.3,
       started: false,
       score: 0,
-      pipes: getInitialPipes(800, 800),
+      pipes: getInitialPipes(props.height, props.width),
       velocity: 10,
       gravity: 1.1,
-      pipeSpeed: 7,
+      pipeSpeed: this.props.width / 100, //smaller width slower pipespeed
       gameStarted: false,
-      gameOver: true,
+      gameOver: false,
       isHit: false,
     };
 
@@ -92,7 +200,6 @@ export class FlappyEye extends React.Component {
     this.handleTouch = this.handleTouch.bind(this);
     this.moveUp = this.moveUp.bind(this);
     this.update = this.update.bind(this);
-    //this.setVelocity = this.setVelocity.bind(this);
   }
 
   moveUp() {
@@ -104,10 +211,9 @@ export class FlappyEye extends React.Component {
   update() {
     if (
       this.state.currentHeight <= 0 ||
-      this.state.currentHeight >= 760 ||
+      this.state.currentHeight >= this.props.height - 40 ||
       this.state.isHit
     ) {
-      //change the height appropraitely from props
       clearInterval(this.interval);
       this.setState({
         velocity: 0,
@@ -116,49 +222,51 @@ export class FlappyEye extends React.Component {
       });
       return;
     }
+    let birdX = this.state.initialLogoX;
+
     if (
-      (this.state.pipes[0].x > 50 && this.state.pipes[0].x < 150) ||
-      (this.state.pipes[1].x > 50 && this.state.pipes[1].x < 150) //don't put hard-values, use it in conjunction with initialx
+      (this.state.pipes[0].x > birdX - 50 &&
+        this.state.pipes[0].x < birdX + 50) ||
+      (this.state.pipes[1].x > birdX - 50 && this.state.pipes[1].x < birdX + 50) //don't put hard-values, use it in conjunction with initialx
     ) {
       let closerPipe;
-      if (this.state.pipes[0].x > 50 && this.state.pipes[0].x < 150) {
+      if (
+        this.state.pipes[0].x > birdX - 50 &&
+        this.state.pipes[0].x < birdX + 50
+      ) {
         //same as above
         closerPipe = this.state.pipes[0];
       } else {
         closerPipe = this.state.pipes[1];
       }
 
-      const xDifference = this.state.initialLogoX - closerPipe.x;
-      const hitOnX = xDifference < 10 && xDifference > 0;
-      const hitOnUpperY = this.state.currentHeight < closerPipe.upperPipeHeight;
+      const xDifference = closerPipe.x - birdX;
+      const hitOnX = xDifference < 35 && xDifference > -25; //there might be a small problem
+      const hitOnUpperY =
+        this.state.currentHeight + 5 < closerPipe.upperPipeHeight; //adding 5 for corners
+      console.log("current height ", this.state.currentHeight);
       const hitOnLowerY =
-        this.state.currentHeight + 20 > 800 - closerPipe.bottomPipeHeight; //20 is bird radius, put height
+        this.state.currentHeight + 10 >
+        this.props.height - closerPipe.bottomPipeHeight; //10 is for corners, put height
 
       if (hitOnX) {
         if (hitOnUpperY || hitOnLowerY) {
           this.setState({
             isHit: true,
           });
+        }
+        if (this.state.score > 4 && this.state.score % 5 === 0) {
+          //score manipulation
+          this.setState({
+            score: this.state.score + 1,
+            pipeSpeed: this.state.pipeSpeed + 1,
+          });
         } else {
-          if (this.state.score > 2 && this.state.score % 3 === 0) {
-            this.setState({
-              score: this.state.score + 1,
-              pipeSpeed: this.state.pipeSpeed + 3,
-            });
-          } else {
-            this.setState({
-              score: this.state.score + 1,
-            });
-          }
-          console.log(
-            "closer pipe and score",
-            this.state.pipeSpeed,
-            this.state.score
-          );
+          this.setState({
+            score: this.state.score + 1,
+          });
         }
       }
-      console.log("closer pipe", this.state.pipeSpeed);
-      //console.log("x difference ", xDifference);
     }
 
     const newVelocity = (this.state.velocity + this.state.gravity) * 0.9;
@@ -167,9 +275,9 @@ export class FlappyEye extends React.Component {
       const newX = pipe.x - this.state.pipeSpeed;
       if (newX < -28) {
         return {
-          upperPipeHeight: 800 / 2 - 15 - Math.random() * 150,
-          bottomPipeHeight: 800 / 2 - 15 - Math.random() * 150, //add media offset and height
-          x: 800 - 40, //add width
+          upperPipeHeight: this.props.height / 2 - 15 - Math.random() * 150,
+          bottomPipeHeight: this.props.height / 2 - 15 - Math.random() * 150, //add media offset
+          x: this.props.width - 40, //add width
         };
       }
       return {
@@ -216,38 +324,57 @@ export class FlappyEye extends React.Component {
   }
 
   render() {
+    const { height, width } = this.props;
     return (
-      <Screen>
-        <Wrapper width={this.props.width} height={this.props.height}>
-          <MovingWrap
-            horizontal={this.state.initialLogoX}
-            vertical={this.state.currentHeight}
-          >
-            <Logo>
-              <White />
-            </Logo>
-          </MovingWrap>
-          {this.state.pipes.map((pipe) => {
-            const upperPipeHeight = pipe.upperPipeHeight;
-            const x = pipe.x;
+      <Wrapper width={this.props.width} height={this.props.height}>
+        {this.state.gameOver && (
+          <GameOverWrapper>
+            <h1> Game OVER</h1>
+          </GameOverWrapper>
+        )}
+        <HeaderRow>
+          <CloseWrapper>
+            <CloseButton onClick={this.props.stopGame} />
+          </CloseWrapper>
+        </HeaderRow>
+        {!this.state.gameStarted && (
+          <InitialText>
+            Нажмите пробел чтобы взлететь и набирать высоту
+          </InitialText>
+        )}
+        {!this.state.gameOver && (
+          <ScoreWrap height={height + "px"} width={width + "px"}>
+            {this.state.score}
+          </ScoreWrap>
+        )}
+        <MovingWrap
+          horizontal={this.state.initialLogoX}
+          vertical={this.state.currentHeight}
+        >
+          <Logo>
+            <White />
+          </Logo>
+        </MovingWrap>
+        {this.state.pipes.map((pipe) => {
+          const upperPipeHeight = pipe.upperPipeHeight;
+          const x = pipe.x;
 
-            const bottomPipeTop = 800 - pipe.bottomPipeHeight; //make it height
-            const bottomPipeHeight = pipe.bottomPipeHeight;
+          const bottomPipeTop = this.props.height - pipe.bottomPipeHeight; //make it height
+          const bottomPipeHeight = pipe.bottomPipeHeight;
 
-            return (
-              <Pipe
-                key={x}
-                isHit={pipe.isHit}
-                upperPipeHeight={upperPipeHeight}
-                bottomPipeHeight={bottomPipeHeight}
-                x={x}
-                bottomPipeTop={bottomPipeTop}
-                color={this.props.color}
-              />
-            );
-          })}
-        </Wrapper>
-      </Screen>
+          return (
+            <Pipe
+              key={x}
+              isHit={pipe.isHit}
+              upperPipeHeight={upperPipeHeight}
+              bottomPipeHeight={bottomPipeHeight}
+              x={x}
+              bottomPipeTop={bottomPipeTop}
+              color={this.props.color}
+            />
+          );
+        })}
+      </Wrapper>
     );
   }
 }
@@ -255,6 +382,6 @@ export class FlappyEye extends React.Component {
 export default FlappyEye;
 
 FlappyEye.defaultProps = {
-  height: "800px",
-  width: "800px",
+  height: 800,
+  width: 400,
 };
