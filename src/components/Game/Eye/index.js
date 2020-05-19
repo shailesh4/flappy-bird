@@ -25,11 +25,12 @@ const Screen = styled.div`
 
 const Wrapper = styled.div`
   &&& {
-    display: flex;
-    width: ${(props) => props.width || "500px"};
-    height: ${(props) => props.height || "500px"};
+    touch-action: manipulation !important;
+    position: relative !important;
+    overflow: hidden !important;
+    height: ${(props) => (props.height ? props.height : "100%")} !important;
+    width: ${(props) => (props.width ? props.width : "100%")} !important;
     background: grey;
-    position: relative;
   }
 `;
 
@@ -71,9 +72,9 @@ export class FlappyEye extends React.Component {
     super(props);
     this.state = {
       currentHeight: 800 / 2 + 120, // change the constant to props.height
-      initialLogoX: 800 / 2 - 20,
+      initialLogoX: 800 / 2 - 250,
       started: false,
-      pipes: getInitialPipes(800, 800),
+      pipes: getInitialPipes(800, 100),
       velocity: 10,
       gravity: 1.1,
       gameStarted: false,
@@ -155,6 +156,7 @@ export class FlappyEye extends React.Component {
               <White />
             </Logo>
           </MovingWrap>
+          {console.log(this.state.pipes)}
           {this.state.pipes.map((pipe) => {
             const upperPipeHeight = pipe.upperPipeHeight;
             const x = pipe.x;

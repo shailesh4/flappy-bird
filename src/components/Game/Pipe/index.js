@@ -13,7 +13,8 @@ const Wrap = styled.div`
 const Rectangle = styled.div`
   display: flex;
   width: 40px;
-  height: ${(props) => props.height};
+  height: ${(props) =>
+    props.height ? `${props.height}px !important` : "0px !important;"};
   border-radius: ${(props) =>
     props.up
       ? "0px 0px 50px 50px !important;"
@@ -31,11 +32,10 @@ export default function Pipe({
 }) {
   const colors = isHit ? color : "#FF2D55";
   return (
-    <div id="pipe">
+    <>
       <Wrap pipeX={x} lowerHeight={0}>
         <Rectangle
           color={color}
-          width={40}
           height={upperPipeHeight}
           fill={{ color: colors }}
           up
@@ -44,11 +44,10 @@ export default function Pipe({
       <Wrap pipeX={x} lowerHeight={bottomPipeTop}>
         <Rectangle
           color={color}
-          width={40}
           height={bottomPipeHeight}
           fill={{ color: colors }}
         />
       </Wrap>
-    </div>
+    </>
   );
 }
