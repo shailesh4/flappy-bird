@@ -74,11 +74,14 @@ export class FlappyEye extends React.Component {
       currentHeight: 800 / 2 + 120, // change the constant to props.height
       initialLogoX: 800 / 2 - 250,
       started: false,
-      pipes: getInitialPipes(800, 100),
+      score: 0,
+      pipes: getInitialPipes(800, 800),
       velocity: 10,
       gravity: 1.1,
+      pipeSpeed: 7,
       gameStarted: false,
       gameOver: true,
+      isHit: false,
     };
 
     this.handleSpace = this.handleSpace.bind(this);
@@ -95,7 +98,11 @@ export class FlappyEye extends React.Component {
   }
 
   update() {
-    if (this.state.currentHeight <= 0 || this.state.currentHeight >= 760) {
+    if (
+      this.state.currentHeight <= 0 ||
+      this.state.currentHeight >= 760 ||
+      this.state.isHit
+    ) {
       //change the height appropraitely from props
       clearInterval(this.interval);
       this.setState({
@@ -105,11 +112,71 @@ export class FlappyEye extends React.Component {
       });
       return;
     }
+    if (
+      (this.state.pipes[0].x > 50 && this.state.pipes[0].x < 150) ||
+      (this.state.pipes[1].x > 50 && this.state.pipes[1].x < 150) //don't put hard-values, use it in conjunction with initialx
+    ) {
+      let closerPipe;
+      if (this.state.pipes[0].x > 50 && this.state.pipes[0].x < 150) {
+        //same as above
+        closerPipe = this.state.pipes[0];
+      } else {
+        closerPipe = this.state.pipes[1];
+      }
+
+      const xDifference = this.state.initialLogoX - closerPipe.x;
+      const hitOnX = xDifference < 10 && xDifference > 0;
+      const hitOnUpperY = this.state.currentHeight < closerPipe.upperPipeHeight;
+      const hitOnLowerY =
+        this.state.currentHeight + 20 > 800 - closerPipe.bottomPipeHeight; //20 is bird radius, put height
+
+      if (hitOnX) {
+        if (hitOnUpperY || hitOnLowerY) {
+          this.setState({
+            isHit: true,
+          });
+        } else {
+          if (this.state.score > 4 && this.state.score % 5 === 0) {
+            this.setState({
+              score: this.state.score + 1,
+              pipeSpeed: this.state.pipeSpeed + 1,
+            });
+          } else {
+            this.setState({
+              score: this.state.score + 1,
+            });
+          }
+          console.log(
+            "closer pipe and score",
+            this.state.pipeSpeed,
+            this.state.score
+          );
+        }
+      }
+      console.log("closer pipe", this.state.pipeSpeed);
+      //console.log("x difference ", xDifference);
+    }
+
     const newVelocity = (this.state.velocity + this.state.gravity) * 0.9;
     const newCurrentHeight = newVelocity + this.state.currentHeight;
+    const newPipes = this.state.pipes.map((pipe) => {
+      const newX = pipe.x - this.state.pipeSpeed;
+      if (newX < -28) {
+        return {
+          upperPipeHeight: 800 / 2 - 15 - Math.random() * 150,
+          bottomPipeHeight: 800 / 2 - 15 - Math.random() * 150, //add media offset and height
+          x: 800 - 40, //add width
+        };
+      }
+      return {
+        ...pipe,
+        x: newX,
+      };
+    });
     this.setState({
       currentHeight: newCurrentHeight,
       velocity: newVelocity,
+      pipes: newPipes,
     });
   }
 
@@ -156,7 +223,6 @@ export class FlappyEye extends React.Component {
               <White />
             </Logo>
           </MovingWrap>
-          {console.log(this.state.pipes)}
           {this.state.pipes.map((pipe) => {
             const upperPipeHeight = pipe.upperPipeHeight;
             const x = pipe.x;
