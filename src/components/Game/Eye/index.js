@@ -45,14 +45,18 @@ const White = styled.div`
     left: 0px !important;
   }
 `;
-const MovingWrap = styled.div`
+const MovingWrap = styled.div.attrs((props) => ({
+  style: {
+    left: `${props.horizontal}px`,
+    top: `${props.vertical}px`,
+  },
+}))`
   &&& {
-    left: ${(props) => `${props.horizontal}px !important;`};
-    top: ${(props) => `${props.vertical}px !important;`};
     position: absolute !important;
   }
 `;
-
+//left: ${(props) => `${props.horizontal}px !important;`};
+//top: ${(props) => `${props.vertical}px !important;`};
 const getInitialPipes = (h, w) => {
   const count = 3;
   const pipes = [];
@@ -136,10 +140,10 @@ export class FlappyEye extends React.Component {
             isHit: true,
           });
         } else {
-          if (this.state.score > 4 && this.state.score % 5 === 0) {
+          if (this.state.score > 2 && this.state.score % 3 === 0) {
             this.setState({
               score: this.state.score + 1,
-              pipeSpeed: this.state.pipeSpeed + 1,
+              pipeSpeed: this.state.pipeSpeed + 3,
             });
           } else {
             this.setState({

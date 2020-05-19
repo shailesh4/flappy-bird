@@ -2,10 +2,13 @@ import React from "react";
 
 import styled from "styled-components";
 
-const Wrap = styled.div`
+const MovingWrap = styled.div.attrs((props) => ({
+  style: {
+    left: `${props.horizontal}px`,
+    top: `${props.vertical}px`,
+  },
+}))`
   &&& {
-    left: ${(props) => `${props.pipeX}px !important;`};
-    top: ${(props) => `${props.lowerHeight}px !important;`};
     position: absolute !important;
   }
 `;
@@ -33,21 +36,21 @@ export default function Pipe({
   const colors = isHit ? color : "#FF2D55";
   return (
     <>
-      <Wrap pipeX={x} lowerHeight={0}>
+      <MovingWrap horizontal={x} vertical={0}>
         <Rectangle
           color={color}
           height={upperPipeHeight}
           fill={{ color: colors }}
           up
         />
-      </Wrap>
-      <Wrap pipeX={x} lowerHeight={bottomPipeTop}>
+      </MovingWrap>
+      <MovingWrap horizontal={x} vertical={bottomPipeTop}>
         <Rectangle
           color={color}
           height={bottomPipeHeight}
           fill={{ color: colors }}
         />
-      </Wrap>
+      </MovingWrap>
     </>
   );
 }
