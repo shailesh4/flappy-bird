@@ -179,9 +179,17 @@ const getInitialPipes = (h, w) => {
   const pipes = [];
   for (let i = 1; i < count; i++) {
     const x = w + 200 + w / i;
+    const upperPipeHeight = h - Math.random() * h * 0.9 - 160;
+    let bottomPipeHeight =
+      h - upperPipeHeight - 80 - Math.random() * 0.2 * upperPipeHeight;
+    if (bottomPipeHeight < 0) {
+      bottomPipeHeight = 0;
+    }
     pipes.push({
-      upperPipeHeight: h / 2 - 20 - Math.random() * 150,
-      bottomPipeHeight: h / 2 - 20 - Math.random() * 150, //put the media offset
+      //upperPipeHeight: h / 2 - 20 - Math.random() * 150,
+      //bottomPipeHeight: h / 2 - 20 - Math.random() * 150, //put the media offset
+      upperPipeHeight: upperPipeHeight,
+      bottomPipeHeight: bottomPipeHeight,
       x: x,
     });
   }
@@ -237,6 +245,7 @@ export class FlappyEye extends React.Component {
       gameStarted: false,
       gameOver: false,
       isHit: false,
+      tempPipeHeight: null,
     });
   }
   update() {
@@ -296,12 +305,45 @@ export class FlappyEye extends React.Component {
 
     const newVelocity = (this.state.velocity + this.state.gravity) * 0.9;
     const newCurrentHeight = newVelocity + this.state.currentHeight;
-    const newPipes = this.state.pipes.map((pipe) => {
+    const newPipes = this.state.pipes.map((pipe, index) => {
       const newX = pipe.x - this.state.pipeSpeed;
       if (newX < -28) {
+        let upperPipeHeight =
+          this.props.height - Math.random() * this.props.height * 0.9 - 160;
+        if (upperPipeHeight < 20) {
+          upperPipeHeight = 0;
+        }
+        if (
+          index === 0 &&
+          Math.abs(this.state.pipes[1].upperPipeHeight - upperPipeHeight) > 300
+        ) {
+          upperPipeHeight = Math.abs(
+            upperPipeHeight - this.state.pipes[1].upperPipeHeight
+          );
+          this.setState({
+            tempPipeHeight: upperPipeHeight,
+          });
+        } else if (
+          Math.abs(this.state.tempPipeHeight - upperPipeHeight) > 300
+        ) {
+          upperPipeHeight = Math.abs(
+            upperPipeHeight - this.state.tempPipeHeight
+          );
+        }
+        console.log(upperPipeHeight);
+        let bottomPipeHeight =
+          this.props.height -
+          upperPipeHeight -
+          80 -
+          Math.random() * 0.3 * upperPipeHeight;
+        if (bottomPipeHeight < 0) {
+          bottomPipeHeight = 0;
+        }
         return {
-          upperPipeHeight: this.props.height / 2 - 20 - Math.random() * 150,
-          bottomPipeHeight: this.props.height / 2 - 20 - Math.random() * 150, //add media offset
+          //upperPipeHeight: this.props.height / 2 - 20 - Math.random() * 150,
+          //bottomPipeHeight: this.props.height / 2 - 20 - Math.random() * 150, //add media offset
+          upperPipeHeight: upperPipeHeight,
+          bottomPipeHeight: bottomPipeHeight,
           x: this.props.width + 10, //add 10 so it renders outside
         };
       }
