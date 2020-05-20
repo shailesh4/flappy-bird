@@ -1,7 +1,10 @@
 import React from "react";
 import styled from "styled-components";
 import Pipe from "../Pipe";
-import BasicButton from "../../BasicButton";
+import moment from "moment";
+import AwaitTimer from "../../AwaitTimer";
+import OpaqueButton from "../../OpaqueButton";
+import GameOver from "../GameOver";
 
 //const mediaOffset = mediaType.desktop ? 150 : 170;
 const Logo = styled.div`
@@ -159,72 +162,6 @@ const GameOverWrapper = styled.div`
   }
 `;
 
-const GameOverBlock = styled.div`
-  &&& {
-    height: 60%;
-    width: 100%;
-  }
-`;
-
-const GameOverDetailsWrapper = styled.div`
-  &&& {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 100%;
-    height: 30%;
-    z-index: 2000;
-  }
-`;
-
-const GameOverText = styled.div`
-  &&& {
-    font-family: "Mont";
-    text-align: center;
-    letter-spacing: 0.02em;
-    font-weight: bold;
-    font-size: 16px;
-    line-height: 140%;
-    z-index: 2000;
-    color: #000000;
-  }
-`;
-
-const FinalScoreText = styled.div`
-  &&& {
-    font-family: "Mont";
-
-    font-weight: bold;
-    font-size: 64px;
-    line-height: 100%;
-    /* or 64px */
-
-    text-align: center;
-    letter-spacing: 0.02em;
-
-    /* Primary / brand pink - normal */
-
-    color: #ff2d55;
-  }
-`;
-
-const AccountText = styled.div`
-  &&& {
-    font-family: "Mont";
-    font-weight: normal;
-    font-size: 10px;
-    line-height: 160%;
-
-    text-align: center;
-  }
-`;
-
-const GameOverButtonBlock = styled.div`
-  &&& {
-    display: flex;
-  }
-`;
-
 const MovingWrap = styled.div.attrs((props) => ({
   style: {
     left: `${props.horizontal}px`,
@@ -236,16 +173,15 @@ const MovingWrap = styled.div.attrs((props) => ({
     z-index: 10;
   }
 `;
-//left: ${(props) => `${props.horizontal}px !important;`};
-//top: ${(props) => `${props.vertical}px !important;`};
+
 const getInitialPipes = (h, w) => {
   const count = 3;
   const pipes = [];
   for (let i = 1; i < count; i++) {
     const x = w + 200 + w / i;
     pipes.push({
-      upperPipeHeight: h / 2 - 15 - Math.random() * 150,
-      bottomPipeHeight: h / 2 - 15 - Math.random() * 150, //put the media offset
+      upperPipeHeight: h / 2 - 20 - Math.random() * 150,
+      bottomPipeHeight: h / 2 - 20 - Math.random() * 150, //put the media offset
       x: x,
     });
   }
@@ -258,7 +194,6 @@ export class FlappyEye extends React.Component {
     this.state = {
       currentHeight: props.height * 0.4, // change the constant to props.height
       initialLogoX: props.width * 0.3,
-      started: false,
       score: 0,
       pipes: getInitialPipes(props.height, props.width),
       velocity: 10,
@@ -267,6 +202,8 @@ export class FlappyEye extends React.Component {
       gameStarted: false,
       gameOver: false,
       isHit: false,
+      timestamp: null,
+      timerExceeded: false,
     };
 
     this.handleSpace = this.handleSpace.bind(this);
@@ -274,6 +211,7 @@ export class FlappyEye extends React.Component {
     this.moveUp = this.moveUp.bind(this);
     this.update = this.update.bind(this);
     this.stopGame = this.stopGame.bind(this);
+    this.restart = this.restart.bind(this);
   }
 
   moveUp() {
@@ -287,7 +225,20 @@ export class FlappyEye extends React.Component {
       gameOver: true,
     });
   }
-
+  restart() {
+    this.setState({
+      currentHeight: this.props.height * 0.4,
+      initialLogoX: this.props.width * 0.3,
+      score: 0,
+      pipes: getInitialPipes(this.props.height, this.props.width),
+      velocity: 10,
+      gravity: 1.1,
+      pipeSpeed: this.props.width / 100,
+      gameStarted: false,
+      gameOver: false,
+      isHit: false,
+    });
+  }
   update() {
     if (
       this.state.currentHeight <= 0 ||
@@ -325,7 +276,7 @@ export class FlappyEye extends React.Component {
       const hitOnX = xDifference < 35 && xDifference > -25; //there might be a small problem
       const hitOnUpperY =
         this.state.currentHeight + 5 < closerPipe.upperPipeHeight; //adding 5 for corners
-      console.log("current height ", this.state.currentHeight);
+
       const hitOnLowerY =
         this.state.currentHeight + 35 >
         this.props.height - closerPipe.bottomPipeHeight; //10 is for corners, put height
@@ -349,9 +300,9 @@ export class FlappyEye extends React.Component {
       const newX = pipe.x - this.state.pipeSpeed;
       if (newX < -28) {
         return {
-          upperPipeHeight: this.props.height / 2 - 15 - Math.random() * 150,
-          bottomPipeHeight: this.props.height / 2 - 15 - Math.random() * 150, //add media offset
-          x: this.props.width - 40, //add width
+          upperPipeHeight: this.props.height / 2 - 20 - Math.random() * 150,
+          bottomPipeHeight: this.props.height / 2 - 20 - Math.random() * 150, //add media offset
+          x: this.props.width + 10, //add 10 so it renders outside
         };
       }
       return {
@@ -376,10 +327,11 @@ export class FlappyEye extends React.Component {
   }
 
   handleSpace(e) {
-    //currently handleSpace actually listens for any key down and start the update function, can be remedied by having a game start button.
-    if (!this.state.gameStarted) {
-      this.interval = setInterval(() => this.update(), 15);
-      this.setState({ gameStarted: true });
+    if (e.keyCode === 32) {
+      if (!this.state.gameStarted) {
+        this.interval = setInterval(() => this.update(), 15);
+        this.setState({ gameStarted: true });
+      }
     }
     e.preventDefault();
     if (e.keyCode === 32) {
@@ -403,20 +355,42 @@ export class FlappyEye extends React.Component {
       <Wrapper width={this.props.width} height={this.props.height}>
         {this.state.gameOver && (
           <GameOverWrapper>
-            <GameOverBlock />
-            <GameOverDetailsWrapper>
-              <GameOverText>Game over</GameOverText>
-              <div>
-                <FinalScoreText>{this.state.score}</FinalScoreText>
-                <AccountText>Ваш счёт</AccountText>
-              </div>
-              <GameOverButtonBlock>
-                <BasicButton zIndex={2000}>Закончить</BasicButton>
-              </GameOverButtonBlock>
-            </GameOverDetailsWrapper>
+            <GameOver
+              count={this.state.score}
+              color={this.props.color}
+              restart={this.restart}
+              stopGame={this.stopGame}
+            />
           </GameOverWrapper>
         )}
         <HeaderRow>
+          <AwaitTimer
+            exceedFunc={() => {
+              this.setState({
+                timerExceeded: true,
+              });
+            }}
+            startSec={
+              this.state.timestamp &&
+              moment().diff(
+                moment(this.state.timestamp, moment.ISO_8601),
+                "seconds"
+              ) % 60
+            }
+            startMin={
+              this.state.timestamp &&
+              moment().diff(
+                moment(this.state.timestamp, moment.ISO_8601),
+                "minutes"
+              )
+            }
+            limit={this.props.countdown / 1000}
+          />
+          <ExtraPos>
+            {!this.state.gameOver && (
+              <OpaqueButton onClick={this.stopGame}>Закончить</OpaqueButton>
+            )}
+          </ExtraPos>
           <CloseWrapper>
             <CloseButton onClick={this.stopGame} />
           </CloseWrapper>
