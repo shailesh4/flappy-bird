@@ -1,16 +1,30 @@
 import React from "react";
 import styled from "styled-components";
 import Pipe from "../Pipe";
+import BasicButton from "../../BasicButton";
 
 //const mediaOffset = mediaType.desktop ? 150 : 170;
 const Logo = styled.div`
   &&& {
     position: relative !important;
     width: 24px !important;
-    border: ${(props) => `8px solid #ff2d55 !important`};
+    border: ${(props) => `8px solid ${props.color} !important`};
     height: 24px !important;
     border-radius: 50% !important;
     background: black !important;
+    z-index: 10;
+  }
+`;
+
+const White = styled.div`
+  &&& {
+    position: absolute !important;
+    border-radius: 50% !important;
+    background: white !important;
+    width: 10px !important;
+    height: 10px !important;
+    top: 0px !important;
+    left: 0px !important;
   }
 `;
 // change the color #ff2d55 to props.color later
@@ -20,10 +34,11 @@ const Wrapper = styled.div`
     touch-action: manipulation !important;
     position: relative !important;
     overflow: hidden !important;
+    overflow-y: hidden !important;
     height: ${(props) =>
       props.height ? `${props.height}px` : "100%"} !important;
     width: ${(props) => (props.width ? `${props.width}px` : "100%")} !important;
-    background: grey;
+    border: 1px solid red !important;
   }
 `;
 const HeaderRow = styled.div`
@@ -138,21 +153,78 @@ const GameOverWrapper = styled.div`
     left: 0px !important;
     height: 100% !important;
     width: 100% !important;
-    z-index: 19000 !important;
+    z-index: 1000 !important;
+    opacity: 0.9 !important;
+    background: white !important;
   }
 `;
 
-const White = styled.div`
+const GameOverBlock = styled.div`
   &&& {
-    position: absolute !important;
-    border-radius: 50% !important;
-    background: white !important;
-    width: 10px !important;
-    height: 10px !important;
-    top: 0px !important;
-    left: 0px !important;
+    height: 60%;
+    width: 100%;
   }
 `;
+
+const GameOverDetailsWrapper = styled.div`
+  &&& {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    height: 30%;
+    z-index: 2000;
+  }
+`;
+
+const GameOverText = styled.div`
+  &&& {
+    font-family: "Mont";
+    text-align: center;
+    letter-spacing: 0.02em;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 140%;
+    z-index: 2000;
+    color: #000000;
+  }
+`;
+
+const FinalScoreText = styled.div`
+  &&& {
+    font-family: "Mont";
+
+    font-weight: bold;
+    font-size: 64px;
+    line-height: 100%;
+    /* or 64px */
+
+    text-align: center;
+    letter-spacing: 0.02em;
+
+    /* Primary / brand pink - normal */
+
+    color: #ff2d55;
+  }
+`;
+
+const AccountText = styled.div`
+  &&& {
+    font-family: "Mont";
+    font-weight: normal;
+    font-size: 10px;
+    line-height: 160%;
+
+    text-align: center;
+  }
+`;
+
+const GameOverButtonBlock = styled.div`
+  &&& {
+    display: flex;
+  }
+`;
+
 const MovingWrap = styled.div.attrs((props) => ({
   style: {
     left: `${props.horizontal}px`,
@@ -161,6 +233,7 @@ const MovingWrap = styled.div.attrs((props) => ({
 }))`
   &&& {
     position: absolute !important;
+    z-index: 10;
   }
 `;
 //left: ${(props) => `${props.horizontal}px !important;`};
@@ -200,6 +273,7 @@ export class FlappyEye extends React.Component {
     this.handleTouch = this.handleTouch.bind(this);
     this.moveUp = this.moveUp.bind(this);
     this.update = this.update.bind(this);
+    this.stopGame = this.stopGame.bind(this);
   }
 
   moveUp() {
@@ -208,11 +282,18 @@ export class FlappyEye extends React.Component {
     });
   }
 
+  stopGame() {
+    this.setState({
+      gameOver: true,
+    });
+  }
+
   update() {
     if (
       this.state.currentHeight <= 0 ||
       this.state.currentHeight >= this.props.height - 40 ||
-      this.state.isHit
+      this.state.isHit ||
+      this.state.gameOver
     ) {
       clearInterval(this.interval);
       this.setState({
@@ -246,7 +327,7 @@ export class FlappyEye extends React.Component {
         this.state.currentHeight + 5 < closerPipe.upperPipeHeight; //adding 5 for corners
       console.log("current height ", this.state.currentHeight);
       const hitOnLowerY =
-        this.state.currentHeight + 10 >
+        this.state.currentHeight + 35 >
         this.props.height - closerPipe.bottomPipeHeight; //10 is for corners, put height
 
       if (hitOnX) {
@@ -255,17 +336,10 @@ export class FlappyEye extends React.Component {
             isHit: true,
           });
         }
-        if (this.state.score > 4 && this.state.score % 5 === 0) {
-          //score manipulation
-          this.setState({
-            score: this.state.score + 1,
-            pipeSpeed: this.state.pipeSpeed + 1,
-          });
-        } else {
-          this.setState({
-            score: this.state.score + 1,
-          });
-        }
+
+        this.setState({
+          score: this.state.score + 1,
+        });
       }
     }
 
@@ -329,12 +403,22 @@ export class FlappyEye extends React.Component {
       <Wrapper width={this.props.width} height={this.props.height}>
         {this.state.gameOver && (
           <GameOverWrapper>
-            <h1> Game OVER</h1>
+            <GameOverBlock />
+            <GameOverDetailsWrapper>
+              <GameOverText>Game over</GameOverText>
+              <div>
+                <FinalScoreText>{this.state.score}</FinalScoreText>
+                <AccountText>Ваш счёт</AccountText>
+              </div>
+              <GameOverButtonBlock>
+                <BasicButton zIndex={2000}>Закончить</BasicButton>
+              </GameOverButtonBlock>
+            </GameOverDetailsWrapper>
           </GameOverWrapper>
         )}
         <HeaderRow>
           <CloseWrapper>
-            <CloseButton onClick={this.props.stopGame} />
+            <CloseButton onClick={this.stopGame} />
           </CloseWrapper>
         </HeaderRow>
         {!this.state.gameStarted && (
@@ -351,7 +435,7 @@ export class FlappyEye extends React.Component {
           horizontal={this.state.initialLogoX}
           vertical={this.state.currentHeight}
         >
-          <Logo>
+          <Logo color={this.props.color}>
             <White />
           </Logo>
         </MovingWrap>
@@ -382,6 +466,7 @@ export class FlappyEye extends React.Component {
 export default FlappyEye;
 
 FlappyEye.defaultProps = {
-  height: 800,
+  height: 720,
   width: 400,
+  color: "#FF2D55",
 };

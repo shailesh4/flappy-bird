@@ -23,6 +23,7 @@ const Rectangle = styled.div`
       ? "0px 0px 50px 50px !important;"
       : "50px 50px 0px 0px !important;"};
   background: ${(props) => props.color || "#FF2D55"};
+  z-index: 10;
 `;
 
 export default function Pipe({
